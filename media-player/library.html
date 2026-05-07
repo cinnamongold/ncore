@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquid Glass Media Player - Library</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-highlight: rgba(255, 255, 255, 0.3);
+            --glass-shadow: rgba(0, 0, 0, 0.2);
+            --refraction-light: rgba(255, 255, 255, 0.4);
+            --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            animation: float 20s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        .bg-orb-1 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            top: -100px;
+            left: -100px;
+        }
+
+        .bg-orb-2 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            bottom: -50px;
+            right: -50px;
+            animation-delay: -5s;
+        }
+
+        .bg-orb-3 {
+            width: 250px;
+            height: 250px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 30px) scale(1.02); }
+        }
+
+        .nav-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+
+        .nav-bar {
+            display: flex;
+            gap: 12px;
+            padding: 16px 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 
+                0 8px 32px var(--glass-shadow),
+                inset 0 1px 0 var(--glass-highlight);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 20px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.7);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--refraction-light), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-item:hover::before {
+            left: 100%;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .nav-item.active {
+            background: var(--accent-gradient);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+        }
+
+        .nav-label {
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .main-content {
+            position: relative;
+            z-index: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-bottom: 120px;
+        }
+
+        .page-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 
+                0 8px 32px var(--glass-shadow),
+                inset 0 1px 0 var(--glass-highlight);
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 16px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            backdrop-filter: blur(20px);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .filter-btn {
+            padding: 16px 24px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            color: #fff;
+            cursor: pointer;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .library-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 24px;
+        }
+
+        .media-item {
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .media-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .media-thumbnail {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .media-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .media-artist {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .view-all {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .view-all:hover {
+            color: #fff;
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .category-tab {
+            padding: 12px 24px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s;
+            backdrop-filter: blur(20px);
+        }
+
+        .category-tab:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .category-tab.active {
+            background: var(--accent-gradient);
+            color: #fff;
+            border-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <div class="main-content">
+        <h1 class="page-title">Library</h1>
+
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Search your library...">
+            <button class="filter-btn">🎵 Music</button>
+            <button class="filter-btn">🎬 Videos</button>
+            <button class="filter-btn">📷 Photos</button>
+        </div>
+
+        <div class="category-tabs">
+            <div class="category-tab active">All</div>
+            <div class="category-tab">Artists</div>
+            <div class="category-tab">Albums</div>
+            <div class="category-tab">Songs</div>
+            <div class="category-tab">Playlists</div>
+            <div class="category-tab">Genres</div>
+        </div>
+
+        <div class="glass-card">
+            <div class="section-header">
+                <h2 class="section-title">Recently Added</h2>
+                <a href="#" class="view-all">View All</a>
+            </div>
+            <div class="library-grid">
+                <div class="media-item">
+                    <div class="media-thumbnail">🎵</div>
+                    <div class="media-title">Track Name</div>
+                    <div class="media-artist">Artist</div>
+                </div>
+                <div class="media-item">
+                    <div class="media-thumbnail">🎸</div>
+                    <div class="media-title">Album Title</div>
+                    <div class="media-artist">Band Name</div>
+                </div>
+                <div class="media-item">
+                    <div class="media-thumbnail">🎹</div>
+                    <div class="media-title">Song Title</div>
+                    <div class="media-artist">Performer</div>
+                </div>
+                <div class="media-item">
+                    <div class="media-thumbnail">🎤</div>
+                    <div class="media-title">Vocal Track</div>
+                    <div class="media-artist">Singer</div>
+                </div>
+                <div class="media-item">
+                    <div class="media-thumbnail">🥁</div>
+                    <div class="media-title">Drum Session</div>
+                    <div class="media-artist">Drummer</div>
+                </div>
+                <div class="media-item">
+                    <div class="media-thumbnail">🎺</div>
+                    <div class="media-title">Jazz Collection</div>
+                    <div class="media-artist">Jazz Artist</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="section-header">
+                <h2 class="section-title">Playlists</h2>
+                <a href="#" class="view-all">View All</a>
+            </div>
+            <div class="library-grid">
+                <div class="media-item">
+                    <div class="media-thumbnail">⭐</div>
+                    <div class="media-title">Favorites</div>
+                    <div class="media-artist">24 tracks</div>
+                </div>
+                <div class="media-item">
+                    <div class="media-thumbnail">🌙</div>
+                    <div class="media-title">Chill Vibes</div>
+                    <div class="media-artist">18 tracks</div>
+                </div>
+                <div class="media-item">
+                    <div class="media-thumbnail">⚡</div>
+                    <div class="media-title">Workout</div>
+                    <div class="media-artist">32 tracks</div>
+                </div>
+                <div class="media-item">
+                    <div class="media-thumbnail">🚗</div>
+                    <div class="media-title">Road Trip</div>
+                    <div class="media-artist">45 tracks</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-container">
+        <nav class="nav-bar">
+            <a href="index.html" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Home</span>
+            </a>
+            <a href="library.html" class="nav-item active">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">Library</span>
+            </a>
+            <a href="recents.html" class="nav-item">
+                <span class="nav-icon">🕐</span>
+                <span class="nav-label">Recents</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Settings</span>
+            </a>
+        </nav>
+    </div>
+</body>
+</html>

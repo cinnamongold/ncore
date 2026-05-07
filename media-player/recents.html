@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquid Glass Media Player - Recents</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-highlight: rgba(255, 255, 255, 0.3);
+            --glass-shadow: rgba(0, 0, 0, 0.2);
+            --refraction-light: rgba(255, 255, 255, 0.4);
+            --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            animation: float 20s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        .bg-orb-1 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            top: -100px;
+            left: -100px;
+        }
+
+        .bg-orb-2 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            bottom: -50px;
+            right: -50px;
+            animation-delay: -5s;
+        }
+
+        .bg-orb-3 {
+            width: 250px;
+            height: 250px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 30px) scale(1.02); }
+        }
+
+        .nav-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+
+        .nav-bar {
+            display: flex;
+            gap: 12px;
+            padding: 16px 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 
+                0 8px 32px var(--glass-shadow),
+                inset 0 1px 0 var(--glass-highlight);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 20px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.7);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--refraction-light), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-item:hover::before {
+            left: 100%;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .nav-item.active {
+            background: var(--accent-gradient);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+        }
+
+        .nav-label {
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .main-content {
+            position: relative;
+            z-index: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-bottom: 120px;
+        }
+
+        .page-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 
+                0 8px 32px var(--glass-shadow),
+                inset 0 1px 0 var(--glass-highlight);
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .recents-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .recent-item {
+            display: grid;
+            grid-template-columns: 60px 1fr auto;
+            gap: 20px;
+            align-items: center;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .recent-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(4px);
+        }
+
+        .recent-thumbnail {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .recent-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .recent-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .recent-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .recent-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .recent-time {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .play-badge {
+            padding: 8px 16px;
+            background: var(--accent-gradient);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .clear-btn {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .clear-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .time-group {
+            margin-bottom: 32px;
+        }
+
+        .time-group-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            padding: 24px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <div class="main-content">
+        <h1 class="page-title">Recents</h1>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">24</div>
+                <div class="stat-label">Tracks Played</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">8h 32m</div>
+                <div class="stat-label">Listening Time</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">12</div>
+                <div class="stat-label">Artists</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">6</div>
+                <div class="stat-label">Albums</div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="section-header">
+                <h2 class="section-title">Recently Played</h2>
+                <button class="clear-btn">Clear History</button>
+            </div>
+
+            <div class="time-group">
+                <h3 class="time-group-title">Today</h3>
+                <div class="recents-list">
+                    <div class="recent-item">
+                        <div class="recent-thumbnail">🎵</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Midnight Dreams</div>
+                            <div class="recent-subtitle">The Dreamers</div>
+                        </div>
+                        <div class="recent-meta">
+                            <span class="recent-time">2 min ago</span>
+                            <span class="play-badge">▶ Played</span>
+                        </div>
+                    </div>
+                    <div class="recent-item">
+                        <div class="recent-thumbnail">🎸</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Electric Sunrise</div>
+                            <div class="recent-subtitle">Rock Ensemble</div>
+                        </div>
+                        <div class="recent-meta">
+                            <span class="recent-time">15 min ago</span>
+                            <span class="play-badge">▶ Played</span>
+                        </div>
+                    </div>
+                    <div class="recent-item">
+                        <div class="recent-thumbnail">🎹</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Piano Sonata No. 14</div>
+                            <div class="recent-subtitle">Classical Masters</div>
+                        </div>
+                        <div class="recent-meta">
+                            <span class="recent-time">1 hour ago</span>
+                            <span class="play-badge">▶ Played</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="time-group">
+                <h3 class="time-group-title">Yesterday</h3>
+                <div class="recents-list">
+                    <div class="recent-item">
+                        <div class="recent-thumbnail">🎤</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Vocal Waves</div>
+                            <div class="recent-subtitle">Indie Artists</div>
+                        </div>
+                        <div class="recent-meta">
+                            <span class="recent-time">Yesterday</span>
+                            <span class="play-badge">▶ Played</span>
+                        </div>
+                    </div>
+                    <div class="recent-item">
+                        <div class="recent-thumbnail">🥁</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Drum & Bass Mix</div>
+                            <div class="recent-subtitle">DJ Beats</div>
+                        </div>
+                        <div class="recent-meta">
+                            <span class="recent-time">Yesterday</span>
+                            <span class="play-badge">▶ Played</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="time-group">
+                <h3 class="time-group-title">This Week</h3>
+                <div class="recents-list">
+                    <div class="recent-item">
+                        <div class="recent-thumbnail">🎺</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Jazz Afternoon</div>
+                            <div class="recent-subtitle">Smooth Jazz Collective</div>
+                        </div>
+                        <div class="recent-meta">
+                            <span class="recent-time">3 days ago</span>
+                            <span class="play-badge">▶ Played</span>
+                        </div>
+                    </div>
+                    <div class="recent-item">
+                        <div class="recent-thumbnail">🎻</div>
+                        <div class="recent-info">
+                            <div class="recent-title">Symphony No. 9</div>
+                            <div class="recent-subtitle">Philharmonic Orchestra</div>
+                        </div>
+                        <div class="recent-meta">
+                            <span class="recent-time">5 days ago</span>
+                            <span class="play-badge">▶ Played</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-container">
+        <nav class="nav-bar">
+            <a href="index.html" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Home</span>
+            </a>
+            <a href="library.html" class="nav-item">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">Library</span>
+            </a>
+            <a href="recents.html" class="nav-item active">
+                <span class="nav-icon">🕐</span>
+                <span class="nav-label">Recents</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Settings</span>
+            </a>
+        </nav>
+    </div>
+</body>
+</html>

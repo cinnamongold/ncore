@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquid Glass Media Player - Settings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-highlight: rgba(255, 255, 255, 0.3);
+            --glass-shadow: rgba(0, 0, 0, 0.2);
+            --refraction-light: rgba(255, 255, 255, 0.4);
+            --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            animation: float 20s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        .bg-orb-1 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            top: -100px;
+            left: -100px;
+        }
+
+        .bg-orb-2 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            bottom: -50px;
+            right: -50px;
+            animation-delay: -5s;
+        }
+
+        .bg-orb-3 {
+            width: 250px;
+            height: 250px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 30px) scale(1.02); }
+        }
+
+        .nav-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+
+        .nav-bar {
+            display: flex;
+            gap: 12px;
+            padding: 16px 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 
+                0 8px 32px var(--glass-shadow),
+                inset 0 1px 0 var(--glass-highlight);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 20px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.7);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--refraction-light), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-item:hover::before {
+            left: 100%;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .nav-item.active {
+            background: var(--accent-gradient);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+        }
+
+        .nav-label {
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .main-content {
+            position: relative;
+            z-index: 1;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-bottom: 120px;
+        }
+
+        .page-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 
+                0 8px 32px var(--glass-shadow),
+                inset 0 1px 0 var(--glass-highlight);
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .settings-section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .setting-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 24px;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+
+        .setting-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .setting-label {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .setting-description {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Liquid Slider */
+        .liquid-slider {
+            -webkit-appearance: none;
+            width: 200px;
+            height: 12px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.3),
+                0 1px 0 var(--glass-highlight);
+        }
+
+        .liquid-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+            cursor: pointer;
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.3),
+                inset 0 2px 4px rgba(255, 255, 255, 0.8),
+                inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+
+        .liquid-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .liquid-slider::-webkit-slider-thumb::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 20%;
+            width: 30%;
+            height: 30%;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            filter: blur(2px);
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 34px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 17px;
+            cursor: pointer;
+            transition: background 0.3s;
+            border: 1px solid var(--glass-border);
+        }
+
+        .toggle-switch.active {
+            background: var(--accent-gradient);
+            border-color: transparent;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 26px;
+            height: 26px;
+            background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(26px);
+        }
+
+        /* Dropdown */
+        .dropdown {
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            outline: none;
+            backdrop-filter: blur(20px);
+            min-width: 180px;
+        }
+
+        .dropdown option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 14px 28px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f5576c, #f093fb);
+            color: #fff;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        /* Quality Options */
+        .quality-options {
+            display: flex;
+            gap: 12px;
+        }
+
+        .quality-option {
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .quality-option:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .quality-option.active {
+            background: var(--accent-gradient);
+            border-color: transparent;
+        }
+
+        /* Storage Bar */
+        .storage-container {
+            margin-top: 16px;
+        }
+
+        .storage-bar {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .storage-fill {
+            height: 100%;
+            width: 65%;
+            background: var(--accent-gradient);
+            border-radius: 6px;
+        }
+
+        .storage-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <div class="main-content">
+        <h1 class="page-title">Settings</h1>
+
+        <div class="glass-card">
+            <div class="settings-section">
+                <h2 class="section-title">🎵 Playback</h2>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Crossfade</div>
+                        <div class="setting-description">Smoothly transition between tracks</div>
+                    </div>
+                    <input type="range" class="liquid-slider" value="5" min="0" max="12">
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Sound Check</div>
+                        <div class="setting-description">Normalize volume across all tracks</div>
+                    </div>
+                    <div class="toggle-switch active"></div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Audio Quality</div>
+                        <div class="setting-description">Select streaming quality</div>
+                    </div>
+                    <select class="dropdown">
+                        <option>High Quality (320kbps)</option>
+                        <option>Medium Quality (192kbps)</option>
+                        <option>Low Quality (128kbps)</option>
+                        <option>Lossless (FLAC)</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Equalizer</div>
+                        <div class="setting-description">Customize audio frequencies</div>
+                    </div>
+                    <button class="btn btn-secondary">Open EQ</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="settings-section">
+                <h2 class="section-title">💾 Storage & Downloads</h2>
+                
+                <div class="storage-container">
+                    <div class="storage-bar">
+                        <div class="storage-fill"></div>
+                    </div>
+                    <div class="storage-info">
+                        <span>65 GB used</span>
+                        <span>100 GB total</span>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Download Quality</div>
+                        <div class="setting-description">Quality for offline downloads</div>
+                    </div>
+                    <div class="quality-options">
+                        <div class="quality-option">Standard</div>
+                        <div class="quality-option active">High</div>
+                        <div class="quality-option">Lossless</div>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Smart Downloads</div>
+                        <div class="setting-description">Automatically download new episodes</div>
+                    </div>
+                    <div class="toggle-switch"></div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary">Clear Cache</button>
+                    <button class="btn btn-danger">Delete All Downloads</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="settings-section">
+                <h2 class="section-title">🎨 Appearance</h2>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Theme</div>
+                        <div class="setting-description">Choose your preferred theme</div>
+                    </div>
+                    <select class="dropdown">
+                        <option>Dark</option>
+                        <option>Light</option>
+                        <option>Auto</option>
+                    </select>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Accent Color</div>
+                        <div class="setting-description">Personalize your player</div>
+                    </div>
+                    <div class="quality-options">
+                        <div class="quality-option active" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+                        <div class="quality-option" style="background: linear-gradient(135deg, #f093fb, #f5576c);"></div>
+                        <div class="quality-option" style="background: linear-gradient(135deg, #4facfe, #00f2fe);"></div>
+                        <div class="quality-option" style="background: linear-gradient(135deg, #43e97b, #38f9d7);"></div>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Show Lyrics</div>
+                        <div class="setting-description">Display lyrics when available</div>
+                    </div>
+                    <div class="toggle-switch active"></div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Animated Backgrounds</div>
+                        <div class="setting-description">Enable ambient visual effects</div>
+                    </div>
+                    <div class="toggle-switch active"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="settings-section">
+                <h2 class="section-title">📱 Device & Account</h2>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Connected Devices</div>
+                        <div class="setting-description">Manage playback on other devices</div>
+                    </div>
+                    <button class="btn btn-secondary">View Devices</button>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Offline Mode</div>
+                        <div class="setting-description">Play only downloaded content</div>
+                    </div>
+                    <div class="toggle-switch"></div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Data Saver</div>
+                        <div class="setting-description">Reduce data usage on mobile networks</div>
+                    </div>
+                    <div class="toggle-switch"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="settings-section">
+                <h2 class="section-title">⚠️ Advanced</h2>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Reset All Settings</div>
+                        <div class="setting-description">Restore default configuration</div>
+                    </div>
+                    <button class="btn btn-secondary">Reset</button>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Clear Listening History</div>
+                        <div class="setting-description">Remove all play history</div>
+                    </div>
+                    <button class="btn btn-danger">Clear History</button>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">About</div>
+                        <div class="setting-description">Version 1.0.0 • Build 2024</div>
+                    </div>
+                    <button class="btn btn-secondary">Learn More</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-container">
+        <nav class="nav-bar">
+            <a href="index.html" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Home</span>
+            </a>
+            <a href="library.html" class="nav-item">
+                <span class="nav-icon">📚</span>
+                <span class="nav-label">Library</span>
+            </a>
+            <a href="recents.html" class="nav-item">
+                <span class="nav-icon">🕐</span>
+                <span class="nav-label">Recents</span>
+            </a>
+            <a href="settings.html" class="nav-item active">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        // Toggle switch functionality
+        document.querySelectorAll('.toggle-switch').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('active');
+            });
+        });
+
+        // Quality option selection
+        document.querySelectorAll('.quality-option').forEach(option => {
+            option.addEventListener('click', () => {
+                const siblings = option.parentElement.querySelectorAll('.quality-option');
+                siblings.forEach(sib => sib.classList.remove('active'));
+                option.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
